@@ -1,0 +1,12 @@
+Tuesday 14:00
+- divided code(all)
+- goal-object to define the goal of the quadrocopter(Ren)
+  - get the postion of the goal
+  - find the grid-cube in which it is located
+  - add the goal as last point to the path after the pathfinding algorythm
+- check for 3D of University-Building(Jinke) 
+  - Google-Earth
+  - architecture department
+  - possible data-types for import to V-REP
+- implementing RRT-Algorythm(Jonas)
+- Build S311 (Jonas)
