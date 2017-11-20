@@ -14,7 +14,7 @@ Spyder3 (for comfortable development)
 
 2. Clone the repository
 
-3. Open VREP (from terminal so the ROS plugin works) and open the scene named "vrep/columns_and_blocks.ttt"
+3. Open VREP (from terminal so the ROS plugin works) and open the scene named "vrep/columns_and_blocks.ttt". It may be necessary to replace the file "vrep_interface/remoteApi.so" with the compiled version for your current VREP version.
 
 4. Open spyder3
 
