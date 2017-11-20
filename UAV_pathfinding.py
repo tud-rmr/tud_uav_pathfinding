@@ -12,7 +12,7 @@ import sys
 import numpy as np#needed for the arrays and some other mathematical operations
 import time
 from scipy import interpolate#needed for the interpolation functions
-import collections #needed for the queue       
+import collections #needed for the queue
 import heapq#needed for the queue
 from copy import deepcopy
 import astar_blender
@@ -27,14 +27,14 @@ def search(goal,start,search_type,interpolation,mapdata):
     (x,y,z)=mapdata.shape
     grid=SquareGrid(x,y,z)
     if search_type=="astar":
-        came_from, cost_so_far = a_star_search(grid, start2, goal2, mapdata) 
+        came_from, cost_so_far = a_star_search(grid, start2, goal2, mapdata)
         path=reconstruct_path(came_from,start2,goal2)
     if search_type=="rrt":
-        path = rrt.search(grid, start2, goal2, mapdata) 
+        path = rrt.search(grid, start2, goal2, mapdata)
     if search_type=="astar_blender":
         path=astar_blender.search(goal2,start2,mapdata)
         print (path)
-        
+
     path=interpolation_skip_points(path, mapdata)
     path=path_grid_to_m(path,start,goal)
     path=interpolation_polynom(path,interpolation)
@@ -43,9 +43,9 @@ def search(goal,start,search_type,interpolation,mapdata):
 def distance(a, b):
     (x1, y1, z1) = a
     (x2, y2, z2) = b
-    return math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)  
-    
-def m_to_grid(point):   
+    return math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+
+def m_to_grid(point):
     xm=point[0]
     ym=point[1]
     zm=point[2]
@@ -55,7 +55,7 @@ def m_to_grid(point):
     point=(xgrid,ygrid,zgrid)
     return point
 #interpolation
-#1. step elimination of unnecessary nodes in the path, makes the path shorter, because of more direct movements       
+#1. step elimination of unnecessary nodes in the path, makes the path shorter, because of more direct movements
 def interpolation_skip_points(path, mapdata):
     in_progress=1
     while in_progress>0:
@@ -66,10 +66,10 @@ def interpolation_skip_points(path, mapdata):
                 if collision(path[i],path[i+2], mapdata):
                     #if distance(path[i],path[i+2])<4:
                     path.pop(i+1)
-                    in_progress=1   
+                    in_progress=1
                 i=i+1
     print ("Founded path is:", path)
-    path2=deepcopy(path)  
+    path2=deepcopy(path)
     n=0
     count_points=0
     while n < (len(path2)-1):
@@ -78,7 +78,7 @@ def interpolation_skip_points(path, mapdata):
             anzahl=int(round(dis,0)-1)
             (x1,y1,z1)=path2[n]
             (x2,y2,z2)=path2[n+1]
-            if anzahl>0:            
+            if anzahl>0:
                 print ("Print dis, anzahl:", dis,anzahl)
                 for m in range(1,anzahl):
                     x=x1+(x2-x1)*m/anzahl
@@ -143,18 +143,18 @@ def interpolation_polynom(path,grad):
 class PriorityQueue:
     def __init__(self):
         self.elements = []
-    
+
     def empty(self):
         return len(self.elements) == 0
-    
+
     def put(self, item, priority):
         heapq.heappush(self.elements, (priority, item))
-    
+
     def get(self):
         return heapq.heappop(self.elements)[1]
-    
-    
-#this function is the difference between A* and Dijkstra, it returns the distance between a node and the goal, if 2 paths have the same cost it will use the path which is nearer to the goal       
+
+
+#this function is the difference between A* and Dijkstra, it returns the distance between a node and the goal, if 2 paths have the same cost it will use the path which is nearer to the goal
 def heuristic(a, b):
     (x1, y1, z1) = a
     (x2, y2, z2) = b
@@ -169,24 +169,24 @@ def a_star_search(graph, start, goal,mapdata):
     cost_so_far = {}
     came_from[start] = None
     cost_so_far[start] = 0
-    
+
     while not frontier.empty():
         current = frontier.get()
-        
+
         if current == goal:
-            
+
             break
         for next in graph.neighbors(current,mapdata):
-            
+
             new_cost = cost_so_far[current] + graph.cost(current, next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(goal, next)
                 frontier.put(next, priority)
-                came_from[next] = current           
+                came_from[next] = current
     return came_from, cost_so_far
-    
-    
+
+
 #Definition of SquareGrid, a graph which describes the whole area
 class SquareGrid:
     def __init__(self, xmax, ymax, zmax):
@@ -199,7 +199,7 @@ class SquareGrid:
         (x2, y2, z2) = b
         return math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
         #return 1
-    #checks if a possible node is inside the moveable area    
+    #checks if a possible node is inside the moveable area
     def in_bounds(self, id):
         (x, y, z) = id
         return 0 <= x < self.xmax and 0 <= y < self.ymax and 0 <= z < self.zmax
@@ -227,13 +227,13 @@ def collision(a,b, mapdata):
     #straight line between the 2 nodes, 1000 points in between are calculated
     for l in range(1000):
         x=x1+(x2-x1)*(l+1)/1000
-        y=y1+(y2-y1)*(l+1)/1000 
-        z=z1+(z2-z1)*(l+1)/1000       
-        #round the result to get the array indexs 
+        y=y1+(y2-y1)*(l+1)/1000
+        z=z1+(z2-z1)*(l+1)/1000
+        #round the result to get the array indexs
         x=round(x,0)
         y=round(y,0)
         z=round(z,0)
-        out=out+mapdata[x,y,z]
+        out=out+mapdata[int(x),int(y),int(z)]
     #returns only true, if all nodes checked in the array returned the value 0 which means no obstacle
     return out==0
 
