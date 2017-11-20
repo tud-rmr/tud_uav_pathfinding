@@ -3,10 +3,10 @@ This repository contains python code, that can be ran in combination with the Ro
 
 ## Requirenments:
 
-Ubuntu 16.04
-ROS Kinetic
-VREP (With compiled ROS plugin, check VREP documentation)
-Spyder3 (for comfortable development)
+- Ubuntu 16.04
+- ROS Kinetic
+- VREP (With compiled ROS plugin, check VREP documentation)
+- Spyder3 (for comfortable development)
 
 ## Installation
 
