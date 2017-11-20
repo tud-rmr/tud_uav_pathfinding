@@ -31,18 +31,10 @@ and send/receive information. From VREP we obtain the position of the objects on
 
 The steps of the script are as follows:
 
-	Step 1:
+1. Generates an 3D array with the occupancy grid for the current scene in VREP. This is being implemented in the mapgen script. VREP doesn't provide a good way for map generation, so we use a brute force approach. We create an array of proximity sensors on a plane an VREP, then we move the sensors around the environment detecting the objects in order to fill the occupancy grid. This array is stored in a text file for later use, if the scene is the same the mapgen script uses this text file instead of generating the map.
 
-	Generates an 3D array with the occupancy grid for the current scene in VREP. This is being implemented in the mapgen script. VREP doesn't provide a good way for map generation, so we use a brute force approach. We create an array of proximity sensors on a plane an VREP, then we move the sensors around the environment detecting the objects in order to fill the occupancy grid. This array is stored in a text file for later use, if the scene is the same the mapgen script uses this text file instead of generating the map.
+2. The current UAV position and the goal position is obtained from VREP.
 
-	Step 2:
+3. Using the generated map, the currrent position and the goal position, a path is generated using the A* algorithm. This discrete path is then smoothed using polinomials.
 
-	The current UAV position and the goal position is obtained from VREP.
-
-	Step 3:
-
-	Using the generated map, the currrent position and the goal position, a path is generated using the A* algorithm. This discrete path is then smoothed using polinomials.
-
-	Step 4:
-
-	A pathfollowing algorithm is implemented based on a velicity vector field approach. We define an aproximation vector and a tangential vector to the closest point of the path from the current UAV position. These two vectors are then fused together for the final velocity reference of the UAV which is then sent to VREP.
+4. A pathfollowing algorithm is implemented based on a velicity vector field approach. We define an aproximation vector and a tangential vector to the closest point of the path from the current UAV position. These two vectors are then fused together for the final velocity reference of the UAV which is then sent to VREP.
