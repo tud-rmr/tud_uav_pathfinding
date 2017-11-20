@@ -1,5 +1,5 @@
-#3D pathgeneration and pathfollowing for UAV in VREP
-This repository contains python code, that can be ran in combination with the Robot Simulation Platform VREP. This set if scripts simulate Pathfinding, Pathsmoothing and Pathfollowing for an UAV in some different scenearios (one small test area and a bigger area showing 2 buildings of our univesity)
+# 3D pathgeneration and pathfollowing for UAV in VREP
+This repository contains python code, that can be ran in combination with the Robot Simulation Platform VREP. This set of scripts simulate Pathfinding, Pathsmoothing and Pathfollowing for an UAV in different scenearios (one small test area and a bigger area showing 2 buildings of our univesity)
 
 ## Requirenments:
 
