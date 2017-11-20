@@ -14,7 +14,7 @@ This repository contains python code, that can be ran in combination with the Ro
 
 2. Clone the repository
 
-3. Open VREP (from terminal so the ROS plugin works) and open the scene named "vrep/columns_and_blocks.ttt". It may be necessary to replace the file "vrep_interface/remoteApi.so" with the compiled version for your current VREP version.
+3. Open VREP (from terminal so the ROS plugin works) and open the scene named "vrep_worlds/columns_and_blocks.ttt". It may be necessary to replace the file "vrep_interface/remoteApi.so" with the compiled version for your current VREP version.
 
 4. Open spyder3
 
