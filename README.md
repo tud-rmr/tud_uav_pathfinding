@@ -1,19 +1,25 @@
 #3D pathgeneration and pathfollowing for UAV in VREP 
 This repository contains python code, that can be ran in combination with the Roboter Simulation Platform VREP. We used this Platform to simulate Pathfinding, Pathsmoothing und Pathfollowing for an UAV in some different areas(one small test area and a bigger area showing 2 buildings of our univesity)
 
+TODO Clean this REPO!!!!!
+
 ## Requirenments:
 
-Tested in Windows 8.1 and Mac OS with Python 2.7 in Spyder
+Ubuntu 14.04
+VREP (VERSION)
+Spyder3 (for comfortable development)
 
 ## Installation
 
-1. Install VREP
+1. Install latest VREP version
 
 2. Clone the repo
 
-3. Start the simulation of an area
+3. Open VREP and open the scene named "vrep/columns_and_blocks.ttt"
 
-4. Run the UAV_main.py to start the mapdatageneration, pathgeneration and pathfollowing algorythm
+4. Open spyder3
+
+4. In Spyder, run the UAV_main.py to start the mapdatageneration, pathgeneration and pathfollowing algorythm
 
 	Step 1:
 	
@@ -33,7 +39,7 @@ Tested in Windows 8.1 and Mac OS with Python 2.7 in Spyder
 	
 	Step 5:
 	
-	After the goal is reached, it shows the calculated path in comparison to the real path the UAV was flying in 2D.
+	TODO: After the goal is reached, it shows the calculated path in comparison to the real path the UAV was flying in 2D.
 ## Documentation
 
 * The function **path_3d(pos, loop)** included in the file "PathGenerationCubic.py" takes as an argument an array of 3D points (pos) where the path should go through and a boolean (loop) which defines if the trayectory is closed or open. The return of the function is an array for each coordinate of the path and the time (path_x, path_y, path_z and path_t).
