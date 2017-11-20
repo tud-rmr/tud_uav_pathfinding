@@ -20,12 +20,12 @@ import os.path
 # Grid in 3D visualisieren
 
 
- 
+
 #def creategrid(grid, init, goal):
 #    #Grid loschen
 #    bpy.ops.object.select_by_type(type='MESH')
 #    bpy.ops.object.delete(use_global=False)
-#    
+#
 #    for z in range(len(grid)):
 #        for y in range(len(grid[0])):
 #            for x in range(len(grid[0][0])):
@@ -41,9 +41,9 @@ def search(goal, init, map_array):
     grid = np.asarray(map_array)
     grid = grid.transpose()
     grid = list(grid)
-     
+
     heuristic = [[[0 for x in range(len(grid[0][0]))] for y in range(len(grid[0]))] for z in range(len(grid))]
-     
+
     delta = [[-1, 0, 0], # zuruck
              [ 0,-1, 0], # links
              [ 1, 0, 0], # vor
@@ -53,28 +53,28 @@ def search(goal, init, map_array):
     cost = 1
     start = time.clock()
     heuristic = calcheuristic(grid,goal,heuristic)
-    print('Calcheuristic: %0.3fs' % (time.clock() - start))    
-    
+    print('Calcheuristic: %0.3fs' % (time.clock() - start))
+
     closed = [[[0 for x in range(len(grid[0][0]))] for y in range(len(grid[0]))] for z in range(len(grid))]
     closed[init[0]][init[1]][init[2]] = 1
- 
+
     expand = [[[-1 for x in range(len(grid[0][0]))] for y in range(len(grid[0]))] for z in range(len(grid))]
     action = [[[-1 for x in range(len(grid[0][0]))] for y in range(len(grid[0]))] for z in range(len(grid))]
- 
- 
+
+
     x = init[0]
     y = init[1]
     z = init[2]
     g = 0
     h = heuristic[z][y][x]
     f = g+h
- 
+
     open = [[f, g, x, y, z]]
- 
+
     found = False  # flag that is set when search is complete
     resign = False # flag set if we can't find expand
     count = 0
-     
+
     while not found and not resign:
         if len(open) == 0:
             resign = True
@@ -83,7 +83,7 @@ def search(goal, init, map_array):
             open.sort()
             open.reverse()
             next = open.pop()
-             
+
             x = next[2]
             y = next[3]
             z = next[4]
@@ -91,7 +91,7 @@ def search(goal, init, map_array):
             f = next[0]
             expand[z][y][x] = count
             count += 1
-             
+
             if x == goal[0] and y == goal[1] and z == goal[2]:
                 found = True
             else:
@@ -107,14 +107,14 @@ def search(goal, init, map_array):
                                 f2 = g2 + heuristic[z2][y2][x2]
                                 open.append([f2, g2, x2, y2, z2])
                                 closed[z2][y2][x2] = 1
-                                 
+
                                 # Memorize the sucessfull action for path planning
                                 action[z2][y2][x2] = i
-                             
+
     path=[]
- 
+
     path.append([goal[0], goal[1], goal[2]])
-     
+
     while x != init[0] or y != init[1] or z != init[2]:
         x2 = x-delta[action[z][y][x]][0]
         y2 = y-delta[action[z][y][x]][1]
@@ -128,12 +128,12 @@ def search(goal, init, map_array):
 
     #print('\nCoordinates for Path smoothing=')
     path.reverse()
-     
+
     spath=smooth(path)
-    
+
     return path
- 
- 
+
+
 # Heuristic berechnen
 def calcheuristic(grid,goal,heuristic):
     for z in range(len(grid)):
@@ -141,17 +141,17 @@ def calcheuristic(grid,goal,heuristic):
             for x in range(len(grid[0][0])):
                 # Euklidische Distanz fur jede Zelle zum Ziel berechnen
                 dist=((x-goal[0])**2+(y-goal[1])**2+(z-goal[2])**2)**(1/2)
-             
+
                 heuristic[z][y][x]=dist
     return heuristic
- 
+
 def smooth(path, weight_data = 0.5, weight_smooth = 0.3, tolerance = 0.00001):
     # Make a deep copy of path into newpath
     newpath = [[0 for row in range(len(path[0]))] for col in range(len(path))]
     for i in range(len(path)):
         for j in range(len(path[0])):
             newpath[i][j] = path[i][j]
- 
+
     change = tolerance
     while change >= tolerance:
         change = 0.0
@@ -162,7 +162,7 @@ def smooth(path, weight_data = 0.5, weight_smooth = 0.3, tolerance = 0.00001):
                            newpath[i][j] += weight_smooth * (newpath[i-1][j] \
                                                              + newpath[i+1][j] - (2.0*newpath[i][j]))
                            change += abs(aux- newpath[i][j])
-    for i in range(len(path)):
-        print(path[i], newpath[i])
-  
+#    for i in range(len(path)):
+#        print(path[i], newpath[i])
+
     return newpath

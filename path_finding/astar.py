@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 11 21:43:46 2016
+Created on Fri Oct 30 00:17:18 2015
 
-@authors: lijinke, Raul Acuna
+@author: renchen
 """
 
 #import from Libaries which are usefull
@@ -11,13 +11,12 @@ import vrep#needed for the Connection with the Simulator
 import sys
 import numpy as np#needed for the arrays and some other mathematical operations
 import time
+import math
 from scipy import interpolate#needed for the interpolation functions
 import collections #needed for the queue
 import heapq#needed for the queue
+import random
 from copy import deepcopy
-import astar_blender
-import rrt
-import math
 
 def search(goal,start,search_type,interpolation,mapdata):
     global mapdata2
@@ -25,50 +24,53 @@ def search(goal,start,search_type,interpolation,mapdata):
     goal2=m_to_grid(goal)
     start2=m_to_grid(start)
     (x,y,z)=mapdata.shape
+    #print x,y,z
     grid=SquareGrid(x,y,z)
     if search_type=="astar":
         came_from, cost_so_far = a_star_search(grid, start2, goal2, mapdata)
+        #print goal2, start2
         path=reconstruct_path(came_from,start2,goal2)
     if search_type=="rrt":
-        path = rrt.search(grid, start2, goal2, mapdata)
-    if search_type=="astar_blender":
-        path=astar_blender.search(goal2,start2,mapdata)
-        print (path)
-
-    path=interpolation_skip_points(path, mapdata)
+        path = rrt_search(grid, start2, goal2, mapdata)
+        #print goal2, start2
+        #print path
+    #print path
+    path=interpolation_skip_points(path)
+    #print path
     path=path_grid_to_m(path,start,goal)
-    path=interpolation_polynom(path,interpolation)
-    return path
 
-def distance(a, b):
-    (x1, y1, z1) = a
-    (x2, y2, z2) = b
-    return math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+
+
+    path=interpolation_polynom(path,interpolation)
+    #print path
+    #print path
+    return path
+    #return
 
 def m_to_grid(point):
     xm=point[0]
     ym=point[1]
     zm=point[2]
-    xgrid=int(round(xm/0.2-0.0,0))
-    ygrid=int(round(ym/0.2-0.0,0))
-    zgrid=int(round(zm/0.2-0.0,0))
+    xgrid=int(round(xm/0.4-1,0))
+    ygrid=int(round(ym/0.4-1,0))
+    zgrid=int(round(zm/0.4-1,0))
     point=(xgrid,ygrid,zgrid)
     return point
 #interpolation
 #1. step elimination of unnecessary nodes in the path, makes the path shorter, because of more direct movements
-def interpolation_skip_points(path, mapdata):
+def interpolation_skip_points(path):
     in_progress=1
     while in_progress>0:
         in_progress=0
         i=0
         if len(path)>2:
             while i <(len(path)-2):
-                if collision(path[i],path[i+2], mapdata):
+                if collision(path[i],path[i+2]):
                     #if distance(path[i],path[i+2])<4:
                     path.pop(i+1)
                     in_progress=1
                 i=i+1
-    print ("Founded path is:", path)
+    #print path
     path2=deepcopy(path)
     n=0
     count_points=0
@@ -79,7 +81,7 @@ def interpolation_skip_points(path, mapdata):
             (x1,y1,z1)=path2[n]
             (x2,y2,z2)=path2[n+1]
             if anzahl>0:
-                print ("Print dis, anzahl:", dis,anzahl)
+                #print dis,anzahl
                 for m in range(1,anzahl):
                     x=x1+(x2-x1)*m/anzahl
                     y=y1+(y2-y1)*m/anzahl
@@ -87,7 +89,7 @@ def interpolation_skip_points(path, mapdata):
                     new_point=(x,y,z)
                     path.insert(n+m+count_points, new_point)
                 count_points=count_points+anzahl-1
-            print ("path:",path)
+            #print path
         n=n+1
     return path
 
@@ -96,9 +98,9 @@ def path_grid_to_m(path,start,goal):
     data=np.ndarray(shape=(len(path)+2,3),dtype=float)
     for next in range(len(path)):
         (x,y,z)=path[next]
-        data[next+1,0]=x*0.2+0.0
-        data[next+1,1]=y*0.2+0.0
-        data[next+1,2]=z*0.2+0.0
+        data[next+1,0]=x*0.4+0.4
+        data[next+1,1]=y*0.4+0.2
+        data[next+1,2]=z*0.4+0.3
     (sx,sy,sz)=start
     data[0,0]=sx
     data[0,1]=sy
@@ -164,7 +166,7 @@ def heuristic(a, b):
 def a_star_search(graph, start, goal,mapdata):
     frontier = PriorityQueue()
     frontier.put(start, 0)
-    print ("start", start)
+    #print start
     came_from = {}
     cost_so_far = {}
     came_from[start] = None
@@ -184,6 +186,8 @@ def a_star_search(graph, start, goal,mapdata):
                 priority = new_cost + heuristic(goal, next)
                 frontier.put(next, priority)
                 came_from[next] = current
+
+
     return came_from, cost_so_far
 
 
@@ -213,6 +217,14 @@ class SquareGrid:
             boolean=2
         return boolean==3
     #returns all possible nodes to move on, means all theoretical possible nodes next to the given node, filtered by in_bounds() and passable()
+#    def neighbors(self, id):
+#        (x, y, z) = id
+#        results = [(x+1, y, z), (x, y-1, z), (x-1, y, z), (x, y+1, z),(x+1,y+1, z),(x+1,y-1, z),(x-1,y-1, z),(x-1,y+1, z),
+#                   (x, y, z+1),(x+1, y, z+1), (x, y-1, z+1), (x-1, y, z+1), (x, y+1, z+1),(x+1,y+1, z+1),(x+1,y-1, z+1),(x-1,y-1, z+1),(x-1,y+1, z+1),
+#                   (x, y, z-1),(x+1, y, z-1), (x, y-1, z-1), (x-1, y, z-1), (x, y+1, z-1),(x+1,y+1, z-1),(x+1,y-1, z-1),(x-1,y-1, z-1),(x-1,y+1, z-1)]
+#        results = filter(self.in_bounds, results)
+#        results = filter(self.passable, results)
+#        return results
     def neighbors(self, id,mapdata):
         (x, y, z) = id
         results = [(x+1, y, z), (x, y-1, z), (x-1, y, z), (x, y+1, z),(x, y, z+1),(x, y, z-1)]
@@ -220,7 +232,7 @@ class SquareGrid:
         results = filter(self.passable, results)
         return results
 
-def collision(a,b, mapdata):
+def collision(a,b):
     (x1,y1,z1)=a
     (x2,y2,z2)=b
     out=0;
@@ -233,7 +245,7 @@ def collision(a,b, mapdata):
         x=round(x,0)
         y=round(y,0)
         z=round(z,0)
-        out=out+mapdata[int(x),int(y),int(z)]
+        out=out+mapdata2[x,y,z]
     #returns only true, if all nodes checked in the array returned the value 0 which means no obstacle
     return out==0
 
@@ -247,3 +259,108 @@ def reconstruct_path(came_from, start, goal):
         path.append(current)
     path.reverse()
     return path
+
+
+##RRT
+def distance(a, b):
+    (x1, y1, z1) = a
+    (x2, y2, z2) = b
+    return math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+
+def Nearest(node, tree):
+    nearest = tree[0]
+    for next in tree:
+        if distance(next,node)<distance(nearest,node):
+            nearest = next
+    return nearest
+
+def Extend(node1, node2, step):
+    dis=0
+    dis = distance(node1, node2)
+    if collision(node1, node2):
+        if dis<step:
+            step = dis
+        (x1,y1,z1) = node1
+        (x2,y2,z2) = node2
+        #straight line between the 2 nodes
+        x = x1+(x2-x1)*step/dis
+        y = y1+(y2-y1)*step/dis
+        z = z1+(z2-z1)*step/dis
+        #round the result to get the array indexs
+        x = round(x,0)
+        y = round(y,0)
+        z = round(z,0)
+        node = (x,y,z)
+    else:
+        node=node1
+    return node
+
+def reconstruct_path_2(TreeStart, TreeGoal, TreeStartBefore, TreeGoalBefore, start, goal, node):
+    current_node=node
+    path=[]
+    path.append(current_node)
+    while current_node != start:
+        currentIndex=getNodeIndex(TreeStart, current_node)-1
+        current_node=TreeStartBefore[currentIndex]
+        path.append(current_node)
+    path.reverse()
+    current_node=node
+    while current_node != goal:
+        currentIndex=getNodeIndex(TreeGoal, current_node)-1
+        current_node=TreeGoalBefore[currentIndex]
+        path.append(current_node)
+    return path
+
+def getNodeIndex(tree1, node):
+    i=0
+    for next in tree1:
+        if next == node:
+            return i
+        i=i+1
+
+
+def rrt_search(graph, start, goal, mapdata):
+    x,y,z=mapdata.shape
+    K=x*y*z*10
+    step=4
+    TreeStart=[]
+    TreeStartBefore=[]
+    TreeGoal=[]
+    TreeGoalBefore=[]
+    TreeStart.append(start)
+    TreeGoal.append(goal)
+    test_node=(-1,-1,-1)
+    for i in range(K):
+        if i % 2:
+            TreeStart, TreeStartBefore, new_node = extend_tree(TreeStart, TreeStartBefore, step, x, y, z)
+            if new_node != test_node:
+                if new_node in TreeGoal:
+                    path = reconstruct_path_2(TreeStart, TreeGoal, TreeStartBefore, TreeGoalBefore, start, goal, new_node)
+                    return path
+        else:
+            TreeGoal, TreeGoalBefore, new_node = extend_tree(TreeGoal, TreeGoalBefore, step, x, y, z)
+            if new_node != test_node:
+                if new_node in TreeStart:
+                    path = reconstruct_path_2(TreeStart, TreeGoal, TreeStartBefore, TreeGoalBefore, start, goal, new_node)
+                    return path
+
+def extend_tree(Tree, TreeBefore, step, x, y, z):
+    xrandom=random.randint(0, x-1)
+    yrandom=random.randint(0, y-1)
+    zrandom=random.randint(0, z-1)
+    random_node = (xrandom, yrandom, zrandom) #random node of grid, int values needed
+    nearest_node = Nearest(random_node, Tree) #select the nearest node in tree to the random node
+    while random_node==nearest_node:
+        xrandom=random.randint(0, x-1)
+        yrandom=random.randint(0, y-1)
+        zrandom=random.randint(0, z-1)
+        random_node = (xrandom, yrandom, zrandom)
+        nearest_node = Nearest(random_node, Tree)
+    new_node = Extend(nearest_node, random_node, step)  #
+    if new_node != nearest_node:
+        Tree.append(new_node)
+        TreeBefore.append(nearest_node)
+    else:
+        new_node=(-1,-1,-1)
+    return Tree, TreeBefore, new_node
+

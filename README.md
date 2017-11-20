@@ -1,71 +1,48 @@
-#3D pathgeneration and pathfollowing for UAV in VREP 
-This repository contains python code, that can be ran in combination with the Roboter Simulation Platform VREP. We used this Platform to simulate Pathfinding, Pathsmoothing und Pathfollowing for an UAV in some different areas(one small test area and a bigger area showing 2 buildings of our univesity)
-
-TODO Clean this REPO!!!!!
+#3D pathgeneration and pathfollowing for UAV in VREP
+This repository contains python code, that can be ran in combination with the Robot Simulation Platform VREP. This set if scripts simulate Pathfinding, Pathsmoothing and Pathfollowing for an UAV in some different scenearios (one small test area and a bigger area showing 2 buildings of our univesity)
 
 ## Requirenments:
 
-Ubuntu 14.04
-VREP (VERSION)
+Ubuntu 16.04
+ROS Kinetic
+VREP (With compiled ROS plugin, check VREP documentation)
 Spyder3 (for comfortable development)
 
 ## Installation
 
-1. Install latest VREP version
+1. Install the latest VREP version and compile the ROS Plugin
 
-2. Clone the repo
+2. Clone the repository
 
-3. Open VREP and open the scene named "vrep/columns_and_blocks.ttt"
+3. Open VREP (from terminal so the ROS plugin works) and open the scene named "vrep/columns_and_blocks.ttt"
 
 4. Open spyder3
 
-4. In Spyder, run the UAV_main.py to start the mapdatageneration, pathgeneration and pathfollowing algorythm
+5. In Spyder, run the main.py script which starts the mapdata generation, path generation and pathfollowing algorithms.
+
+## Description of the simulation
+
+In VREP a quadcopter model is implemented with a Velocity Controller for the X and Y direction of movement, and a position controller for the height (Z). The controller is
+quite simple and it can be modified as necessary.
+
+The scripts in python use the VREP ROS plugin in order to connect to the simulation
+and send/receive information. From VREP we obtain the position of the objects on the scene (for building a map), the current quadcopter position and the goal (represented as red sphere in the simulation). The script uses this information to calculate a path from current UAV position to the goal and sends succesive commands so the UAV follows the path.
+
+
+The steps of the script are as follows:
 
 	Step 1:
-	
-	Generates an array with the mapdata for the current scene in VREP
-	
+
+	Generates an 3D array with the occupancy grid for the current scene in VREP. This is being implemented in the mapgen script. VREP doesn't provide a good way for map generation, so we use a brute force approach. We create an array of proximity sensors on a plane an VREP, then we move the sensors around the environment detecting the objects in order to fill the occupancy grid. This array is stored in a text file for later use, if the scene is the same the mapgen script uses this text file instead of generating the map.
+
 	Step 2:
-	
-	Reads the starting position and the goal from the scene
-	
+
+	The current UAV position and the goal position is obtained from VREP.
+
 	Step 3:
-	
-	Finds and interpolates a Path
-	
+
+	Using the generated map, the currrent position and the goal position, a path is generated using the A* algorithm. This discrete path is then smoothed using polinomials.
+
 	Step 4:
-	
-	Starts the pathfollowing
-	
-	Step 5:
-	
-	TODO: After the goal is reached, it shows the calculated path in comparison to the real path the UAV was flying in 2D.
-## Documentation
 
-* The function **path_3d(pos, loop)** included in the file "PathGenerationCubic.py" takes as an argument an array of 3D points (pos) where the path should go through and a boolean (loop) which defines if the trayectory is closed or open. The return of the function is an array for each coordinate of the path and the time (path_x, path_y, path_z and path_t).
-
-* The function **calc_vec_field_fast(path_x, path_y, path_z, cube_size, cube_step)** included in the file "FieldGeneration.py" defines a 3D matrix CUBE for the field of size cube_size and with step size cube_step. For each point inside this cube it calculate the best aproximation vector to the path using the methodology explained in the paper: TODO. The return of the function is the calculated vector field and some helper grids for displaying this field in mayavi.
-
-## Example
-
-In the file "example.py" we define 3 points in a closed loop configuration:
-
-```
-Pos0 = array([4, 8, 3])
-Pos1 = array([14, 12, 17])
-Pos2 = array([14, 4, 17])
-Loop = True
-Pos = array([Pos0, Pos1, Pos2])
-
-path_x, path_y, path_z, path_t = path_3d(Pos, Loop)
-```
-
-and then calculate the vector field with:
-
-```
-vector_field_3D, Xc, Yc, Zc = calc_vec_field_fast(X, Y, Z, 20, 1)
-```
-
-Finally this script uses mlab (Mayavi) to show the resulting path, the vector field and the striplines to observe the possible paths from every point in space.
-
-To create a different path it is only necessary to modify the example file (example.py) with diferent paths and cube sizes.
+	A pathfollowing algorithm is implemented based on a velicity vector field approach. We define an aproximation vector and a tangential vector to the closest point of the path from the current UAV position. These two vectors are then fused together for the final velocity reference of the UAV which is then sent to VREP.
